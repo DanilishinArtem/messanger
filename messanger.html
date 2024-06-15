@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Messenger</title>
+</head>
+<body>
+    <h1>Messenger</h1>
+    <form id="sendMessageForm">
+        <input type="text" id="sender" placeholder="Sender" required><br>
+        <input type="text" id="receiver" placeholder="Receiver" required><br>
+        <input type="text" id="message" placeholder="Message" required><br>
+        <button type="submit">Send Message</button>
+    </form>
+    <h2>Messages</h2>
+    <div id="messages"></div>
+
+    <script>
+        document.getElementById('sendMessageForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const sender = document.getElementById('sender').value;
+            const receiver = document.getElementById('receiver').value;
+            const message = document.getElementById('message').value;
+
+            fetch('http://127.0.0.1:5000/send', {
+                    method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ sender, receiver, message })
+            }).then(response => {
+                return response.text();
+            }).then(data => {
+                console.log(data);
+                loadMessages(receiver);
+            }).catch(error => {
+                console.error('Error:', error);
+            });
+        });
+
+        function loadMessages(user) {
+            fetch(`http://127.0.0.1:5000/receive?user=${user}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const messagesDiv = document.getElementById('messages');
+                    messagesDiv.innerHTML = '';
+                    data.forEach(message => {
+                        const messageElement = document.createElement('div');
+                        messageElement.textContent = `${message}`;
+                        messagesDiv.appendChild(messageElement);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+    </script>
+</body>
+</html>
